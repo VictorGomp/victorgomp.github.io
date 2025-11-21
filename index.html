@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Simple Gravity Simulation</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+    #info {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="sim"></canvas>
+  <div id="info">
+    Simple Gravity Sim<br />
+    Click to reset the ball.
+  </div>
+
+  <script>
+    const canvas = document.getElementById('sim');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Model parameters
+    let y = 50;                 // position (px)
+    let v = 0;                  // velocity (px/s)
+    const g = 300;              // gravity (px/s^2)
+    const radius = 20;
+    const restitution = 0.7;    // bounciness
+
+    let lastTime = null;
+
+    function step(timestamp) {
+      if (!lastTime) lastTime = timestamp;
+      const dt = (timestamp - lastTime) / 1000; // seconds
+      lastTime = timestamp;
+
+      // Integrate motion: v' = v + g dt, y' = y + v dt
+      v += g * dt;
+      y += v * dt;
+
+      const floor = canvas.height - radius;
+
+      // Collision with floor
+      if (y > floor) {
+        y = floor;
+        v = -v * restitution;
+
+        // Small threshold to stop jitter
+        if (Math.abs(v) < 10) v = 0;
+      }
+
+      draw();
+      requestAnimationFrame(step);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw floor
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height - 1);
+      ctx.lineTo(canvas.width, canvas.height - 1);
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // Draw ball
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Reset on click
+    canvas.addEventListener('click', () => {
+      y = 50;
+      v = 0;
+    });
+
+    requestAnimationFrame(step);
+  </script>
+</body>
+</html>
